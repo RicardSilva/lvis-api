@@ -40,6 +40,7 @@ class LVIS:
 
         self.img_ann_map = defaultdict(list)
         self.cat_img_map = defaultdict(list)
+        self.cat_name_cat_id_map = defaultdict(list)
 
         self.anns = {}
         self.cats = {}
@@ -54,6 +55,8 @@ class LVIS:
 
         for cat in self.dataset["categories"]:
             self.cats[cat["id"]] = cat
+            for name in cat["synonyms"]:
+                self.cat_name_cat_id_map[name].append(cat["id"])
 
         for ann in self.dataset["annotations"]:
             self.cat_img_map[ann["category_id"]].append(ann["image_id"])
@@ -96,20 +99,36 @@ class LVIS:
         ]
         return ann_ids
 
-    def get_cat_ids(self):
+    def get_cat_ids(self, cat_names=None):
         """Get all category ids.
-
+        Args:
+            cat_names (string array): get cat ids for given cat names
         Returns:
             ids (int array): integer array of category ids
         """
+        if cat_names is not None:
+            cat_ids = []
+            for cat_name in cat_names:
+                cat_ids.extend(self.cat_name_cat_id_map[cat_name])
+            return cat_ids
+
         return list(self.cats.keys())
 
-    def get_img_ids(self):
+    def get_img_ids(self, cat_ids=None):
         """Get all img ids.
-
+        Args:
+            cat_ids (int array): get images for given cat ids
         Returns:
             ids (int array): integer array of image ids
         """
+
+        if cat_ids is not None:
+            img_ids = []
+            for cat in cat_ids:
+                img_ids.extend(self.cat_img_map[cat])
+
+            return img_ids            
+
         return list(self.imgs.keys())
 
     def _load_helper(self, _dict, ids):
